@@ -31,22 +31,8 @@ namespace Logging
         }
     }
 
-#ifndef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
 
-    LoggerMessage::LoggerMessage(LoggerMessage &&other):
-        std::ostream(std::move(other)),
-        std::streambuf(std::move(other)),
-        category(other.category),
-        logLevel(other.logLevel),
-        logger(other.logger),
-        message(other.message),
-        timestamp(boost::posix_time::microsec_clock::local_time()),
-        gotText(false)
-    {
-        this->set_rdbuf(this);
-    }
-
-#else
     LoggerMessage::LoggerMessage(LoggerMessage &&other):
         std::ostream(nullptr),
         std::streambuf(),
@@ -97,6 +83,19 @@ namespace Logging
             std::swap(_M_tie, other._M_tie);
         }
         _M_streambuf = this;
+    }
+#else
+    LoggerMessage::LoggerMessage(LoggerMessage &&other):
+        std::ostream(std::move(other)),
+        std::streambuf(std::move(other)),
+        category(other.category),
+        logLevel(other.logLevel),
+        logger(other.logger),
+        message(other.message),
+        timestamp(boost::posix_time::microsec_clock::local_time()),
+        gotText(false)
+    {
+        this->set_rdbuf(this);
     }
 #endif
 

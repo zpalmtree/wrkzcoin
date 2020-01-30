@@ -4,15 +4,17 @@
 
 #pragma once
 
-/* Check if we have the <filesystem> header, or just <experimental/filesystem> */
+#if defined(__cplusplus) && __cplusplus >= 201703L && defined(__has_include)
 #if __has_include(<filesystem>)
-
+#define GHC_USE_STD_FS
 #include <filesystem>
-
+#if !defined(__ANDROID__)
 namespace fs = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#error Your compiler does not support either <filesystem> or <experimental/filesystem>. Please upgrade to one that does.
 #endif
+#endif
+#endif
+#if defined(GHC_USE_STD_FS) || defined(__ANDROID__)
+#include <filesystem/include/ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
+#endif
+
