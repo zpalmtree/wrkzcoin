@@ -15,7 +15,7 @@ namespace fs = std::experimental::filesystem;
 #if defined(GHC_USE_STD_FS) || defined(__ANDROID__)
 #include <filesystem/include/ghc/filesystem.hpp>
 namespace fs = ghc::filesystem;
-#endif
 #else
 #error Your compiler does not support either <filesystem> or <experimental/filesystem>. Please upgrade to one that does.
+#endif
 #endif
