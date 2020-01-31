@@ -24,67 +24,50 @@ if [[ -z "$CMAKE" ]]; then
 	CMAKE=cmake
 fi
 
-#############################################################################
-
-if [[ -z $(command -v "$CMAKE") ]]; then
-	echo "Cannot find $CMAKE. Things may fail."
+# Feth the three required files
+if ! wget --no-check-certificate https://raw.githubusercontent.com/noloader/cryptopp-cmake/master/CMakeLists.txt -O CMakeLists.txt; then
+	echo "CMakeLists.txt download failed"
+	[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 fi
 
-if [[ -z $(command -v curl) ]]; then
-	echo "Cannot find cURL. Things may fail."
+if ! wget --no-check-certificate https://github.com/noloader/cryptopp-cmake/blob/master/cryptopp-config.cmake -O cryptopp-config.cmake; then
+	echo "cryptopp-config.cmake download failed"
+	[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 fi
-
-#############################################################################
-
-files=(CMakeLists.txt cryptopp-config.cmake)
-
-for file in "${files[@]}"; do
-	echo "Downloading $file"
-	if ! curl -o "$file" --silent --insecure "https://raw.githubusercontent.com/noloader/cryptopp-cmake/master/$file"; then
-		echo "$file download failed"
-		exit 1
-	fi
-done
 
 rm -rf "$PWD_DIR/cmake_build"
 mkdir -p "$PWD_DIR/cmake_build"
 cd "$PWD_DIR/cmake_build"
 
-#############################################################################
-
-echo ""
-echo "Building test artifacts"
-echo ""
-
 if [[ ! -z "$CXX" ]];
 then
 	if ! CXX="$CXX" "$CMAKE" -DCMAKE_CXX_COMPILER="$CXX" ../; then
 		echo "cmake failed"
-		exit 1
+		[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 	fi
 else
 	if ! "$CMAKE" ../; then
 		echo "cmake failed"
-		exit 1
+		[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 	fi
 fi
 
-"$MAKE" clean &>/dev/null
+"$MAKE" clean 2>/dev/null
 
 if ! "$MAKE" -j2 -f Makefile VERBOSE=1; then
 	echo "make failed"
-	exit 1
+	[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 fi
 
 if ! ./cryptest.exe v; then
 	echo "cryptest.exe v failed"
-	exit 1
+	[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 fi
 
 if ! ./cryptest.exe tv all; then
 	echo "cryptest.exe v failed"
-	exit 1
+	[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 fi
 
 # Return success
-exit 0
+[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 0 || return 0

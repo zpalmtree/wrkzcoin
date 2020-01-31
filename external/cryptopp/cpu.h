@@ -115,12 +115,12 @@ CRYPTOPP_DLL bool CRYPTOPP_API CpuId(word32 func, word32 subfunc, word32 output[
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasSSE2()
 {
-#if (CRYPTOPP_SSE2_ASM_AVAILABLE || CRYPTOPP_SSE2_INTRIN_AVAILABLE)
+#if CRYPTOPP_BOOL_X64
+	return true;
+#else
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasSSE2;
-#else
-	return false;
 #endif
 }
 
@@ -130,13 +130,9 @@ inline bool HasSSE2()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasSSSE3()
 {
-#if CRYPTOPP_SSSE3_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasSSSE3;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines SSE4.1 availability
@@ -145,13 +141,9 @@ inline bool HasSSSE3()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasSSE41()
 {
-#if CRYPTOPP_SSE41_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasSSE41;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines SSE4.2 availability
@@ -160,13 +152,9 @@ inline bool HasSSE41()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasSSE42()
 {
-#if CRYPTOPP_SSE42_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasSSE42;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines AES-NI availability
@@ -176,13 +164,9 @@ inline bool HasSSE42()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasAESNI()
 {
-#if CRYPTOPP_AESNI_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasAESNI;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines Carryless Multiply availability
@@ -192,13 +176,9 @@ inline bool HasAESNI()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasCLMUL()
 {
-#if CRYPTOPP_CLMUL_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasCLMUL;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines SHA availability
@@ -208,13 +188,9 @@ inline bool HasCLMUL()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasSHA()
 {
-#if CRYPTOPP_SHANI_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasSHA;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines ADX availability
@@ -224,13 +200,9 @@ inline bool HasSHA()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasADX()
 {
-#if CRYPTOPP_ADX_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasADX;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines AVX availability
@@ -240,13 +212,9 @@ inline bool HasADX()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasAVX()
 {
-#if CRYPTOPP_AVX_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasAVX;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines AVX2 availability
@@ -256,118 +224,9 @@ inline bool HasAVX()
 /// \note This function is only available on Intel IA-32 platforms
 inline bool HasAVX2()
 {
-#if CRYPTOPP_AVX2_AVAILABLE
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_hasAVX2;
-#else
-	return false;
-#endif
-}
-
-/// \brief Determines RDRAND availability
-/// \returns true if RDRAND is determined to be available, false otherwise
-/// \details HasRDRAND() is a runtime check performed using CPUID
-/// \note This function is only available on Intel IA-32 platforms
-inline bool HasRDRAND()
-{
-#if CRYPTOPP_RDRAND_AVAILABLE
-	if (!g_x86DetectionDone)
-		DetectX86Features();
-	return g_hasRDRAND;
-#else
-	return false;
-#endif
-}
-
-/// \brief Determines RDSEED availability
-/// \returns true if RDSEED is determined to be available, false otherwise
-/// \details HasRDSEED() is a runtime check performed using CPUID
-/// \note This function is only available on Intel IA-32 platforms
-inline bool HasRDSEED()
-{
-#if CRYPTOPP_RDSEED_AVAILABLE
-	if (!g_x86DetectionDone)
-		DetectX86Features();
-	return g_hasRDSEED;
-#else
-	return false;
-#endif
-}
-
-/// \brief Determines Padlock RNG availability
-/// \returns true if VIA Padlock RNG is determined to be available, false otherwise
-/// \details HasPadlockRNG() is a runtime check performed using CPUID
-/// \note This function is only available on Intel IA-32 platforms
-inline bool HasPadlockRNG()
-{
-#if CRYPTOPP_PADLOCK_RNG_AVAILABLE
-	if (!g_x86DetectionDone)
-		DetectX86Features();
-	return g_hasPadlockRNG;
-#else
-	return false;
-#endif
-}
-
-/// \brief Determines Padlock ACE availability
-/// \returns true if VIA Padlock ACE is determined to be available, false otherwise
-/// \details HasPadlockACE() is a runtime check performed using CPUID
-/// \note This function is only available on Intel IA-32 platforms
-inline bool HasPadlockACE()
-{
-#if CRYPTOPP_PADLOCK_ACE_AVAILABLE
-	if (!g_x86DetectionDone)
-		DetectX86Features();
-	return g_hasPadlockACE;
-#else
-	return false;
-#endif
-}
-
-/// \brief Determines Padlock ACE2 availability
-/// \returns true if VIA Padlock ACE2 is determined to be available, false otherwise
-/// \details HasPadlockACE2() is a runtime check performed using CPUID
-/// \note This function is only available on Intel IA-32 platforms
-inline bool HasPadlockACE2()
-{
-#if CRYPTOPP_PADLOCK_ACE2_AVAILABLE
-	if (!g_x86DetectionDone)
-		DetectX86Features();
-	return g_hasPadlockACE2;
-#else
-	return false;
-#endif
-}
-
-/// \brief Determines Padlock PHE availability
-/// \returns true if VIA Padlock PHE is determined to be available, false otherwise
-/// \details HasPadlockPHE() is a runtime check performed using CPUID
-/// \note This function is only available on Intel IA-32 platforms
-inline bool HasPadlockPHE()
-{
-#if CRYPTOPP_PADLOCK_PHE_AVAILABLE
-	if (!g_x86DetectionDone)
-		DetectX86Features();
-	return g_hasPadlockPHE;
-#else
-	return false;
-#endif
-}
-
-/// \brief Determines Padlock PMM availability
-/// \returns true if VIA Padlock PMM is determined to be available, false otherwise
-/// \details HasPadlockPMM() is a runtime check performed using CPUID
-/// \note This function is only available on Intel IA-32 platforms
-inline bool HasPadlockPMM()
-{
-#if CRYPTOPP_PADLOCK_PMM_AVAILABLE
-	if (!g_x86DetectionDone)
-		DetectX86Features();
-	return g_hasPadlockPMM;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determines if the CPU is an Intel P4
@@ -379,6 +238,83 @@ inline bool IsP4()
 	if (!g_x86DetectionDone)
 		DetectX86Features();
 	return g_isP4;
+}
+
+/// \brief Determines RDRAND availability
+/// \returns true if RDRAND is determined to be available, false otherwise
+/// \details HasRDRAND() is a runtime check performed using CPUID
+/// \note This function is only available on Intel IA-32 platforms
+inline bool HasRDRAND()
+{
+	if (!g_x86DetectionDone)
+		DetectX86Features();
+	return g_hasRDRAND;
+}
+
+/// \brief Determines RDSEED availability
+/// \returns true if RDSEED is determined to be available, false otherwise
+/// \details HasRDSEED() is a runtime check performed using CPUID
+/// \note This function is only available on Intel IA-32 platforms
+inline bool HasRDSEED()
+{
+	if (!g_x86DetectionDone)
+		DetectX86Features();
+	return g_hasRDSEED;
+}
+
+/// \brief Determines Padlock RNG availability
+/// \returns true if VIA Padlock RNG is determined to be available, false otherwise
+/// \details HasPadlockRNG() is a runtime check performed using CPUID
+/// \note This function is only available on Intel IA-32 platforms
+inline bool HasPadlockRNG()
+{
+	if (!g_x86DetectionDone)
+		DetectX86Features();
+	return g_hasPadlockRNG;
+}
+
+/// \brief Determines Padlock ACE availability
+/// \returns true if VIA Padlock ACE is determined to be available, false otherwise
+/// \details HasPadlockACE() is a runtime check performed using CPUID
+/// \note This function is only available on Intel IA-32 platforms
+inline bool HasPadlockACE()
+{
+	if (!g_x86DetectionDone)
+		DetectX86Features();
+	return g_hasPadlockACE;
+}
+
+/// \brief Determines Padlock ACE2 availability
+/// \returns true if VIA Padlock ACE2 is determined to be available, false otherwise
+/// \details HasPadlockACE2() is a runtime check performed using CPUID
+/// \note This function is only available on Intel IA-32 platforms
+inline bool HasPadlockACE2()
+{
+	if (!g_x86DetectionDone)
+		DetectX86Features();
+	return g_hasPadlockACE2;
+}
+
+/// \brief Determines Padlock PHE availability
+/// \returns true if VIA Padlock PHE is determined to be available, false otherwise
+/// \details HasPadlockPHE() is a runtime check performed using CPUID
+/// \note This function is only available on Intel IA-32 platforms
+inline bool HasPadlockPHE()
+{
+	if (!g_x86DetectionDone)
+		DetectX86Features();
+	return g_hasPadlockPHE;
+}
+
+/// \brief Determines Padlock PMM availability
+/// \returns true if VIA Padlock PMM is determined to be available, false otherwise
+/// \details HasPadlockPMM() is a runtime check performed using CPUID
+/// \note This function is only available on Intel IA-32 platforms
+inline bool HasPadlockPMM()
+{
+	if (!g_x86DetectionDone)
+		DetectX86Features();
+	return g_hasPadlockPMM;
 }
 
 /// \brief Provides the cache line size
@@ -677,13 +613,9 @@ void CRYPTOPP_API DetectPowerpcFeatures();
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasAltivec()
 {
-#if CRYPTOPP_ALTIVEC_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasAltivec;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has Power7 available
@@ -694,13 +626,9 @@ inline bool HasAltivec()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasPower7()
 {
-#if CRYPTOPP_POWER7_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasPower7;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has Power8 available
@@ -711,13 +639,9 @@ inline bool HasPower7()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasPower8()
 {
-#if CRYPTOPP_POWER8_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasPower8;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has Power9 available
@@ -728,13 +652,9 @@ inline bool HasPower8()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasPower9()
 {
-#if CRYPTOPP_POWER9_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasPower9;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has AES available
@@ -746,13 +666,9 @@ inline bool HasPower9()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasAES()
 {
-#if CRYPTOPP_POWER8_AES_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasAES;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has Polynomial Multiply available
@@ -764,13 +680,9 @@ inline bool HasAES()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasPMULL()
 {
-#if CRYPTOPP_POWER8_VMULL_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasPMULL;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has SHA256 available
@@ -782,13 +694,9 @@ inline bool HasPMULL()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasSHA256()
 {
-#if CRYPTOPP_POWER8_SHA_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasSHA256;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has SHA512 available
@@ -800,13 +708,9 @@ inline bool HasSHA256()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasSHA512()
 {
-#if CRYPTOPP_POWER8_SHA_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
 	return g_hasSHA512;
-#else
-	return false;
-#endif
 }
 
 /// \brief Determine if a PowerPC processor has DARN available
@@ -817,17 +721,14 @@ inline bool HasSHA512()
 /// \note This function is only available on PowerPC and PowerPC-64 platforms
 inline bool HasDARN()
 {
-#if CRYPTOPP_POWER9_AVAILABLE
 	if (!g_PowerpcDetectionDone)
 		DetectPowerpcFeatures();
+
 	// see comments in cpu.cpp
-#  if defined(__ibmxl__) && defined(__linux__)
+#if defined(__ibmxl__) && defined(__linux__)
 	return false;
-#  else
-	return g_hasDARN;
-#  endif
 #else
-	return false;
+	return g_hasDARN;
 #endif
 }
 

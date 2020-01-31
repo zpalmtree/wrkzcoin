@@ -7,6 +7,14 @@
 #include "misc.h"
 #include "cpu.h"
 
+#ifndef CRYPTOPP_INLINE
+# if defined(CRYPTOPP_DEBUG)
+#  define CRYPTOPP_INLINE static
+# else
+#  define CRYPTOPP_INLINE inline
+# endif
+#endif
+
 // Uncomment for benchmarking C++ against SSE or NEON.
 // Do so in both speck.cpp and speck-simd.cpp.
 // #undef CRYPTOPP_SSSE3_AVAILABLE
@@ -28,7 +36,7 @@ using CryptoPP::rotrConstant;
 ///   additional template parameters also made calling SPECK_Encrypt and SPECK_Decrypt
 ///   kind of messy.
 template <class W>
-inline void TF83(W& x, W& y, const W k)
+CRYPTOPP_INLINE void TF83(W& x, W& y, const W k)
 {
     x = rotrConstant<8>(x);
     x += y; x ^= k;
@@ -44,7 +52,7 @@ inline void TF83(W& x, W& y, const W k)
 ///   additional template parameters also made calling SPECK_Encrypt and SPECK_Decrypt
 ///   kind of messy.
 template <class W>
-inline void TR83(W& x, W& y, const W k)
+CRYPTOPP_INLINE void TR83(W& x, W& y, const W k)
 {
     y ^= x;
     y = rotrConstant<3>(y);
@@ -59,7 +67,7 @@ inline void TR83(W& x, W& y, const W k)
 /// \param p input array
 /// \param k subkey array
 template <class W, unsigned int R>
-inline void SPECK_Encrypt(W c[2], const W p[2], const W k[R])
+CRYPTOPP_INLINE void SPECK_Encrypt(W c[2], const W p[2], const W k[R])
 {
     c[0]=p[0]; c[1]=p[1];
 
@@ -75,7 +83,7 @@ inline void SPECK_Encrypt(W c[2], const W p[2], const W k[R])
 /// \param c input array
 /// \param k subkey array
 template <class W, unsigned int R>
-inline void SPECK_Decrypt(W p[2], const W c[2], const W k[R])
+CRYPTOPP_INLINE void SPECK_Decrypt(W p[2], const W c[2], const W k[R])
 {
     p[0]=c[0]; p[1]=c[1];
 
@@ -91,7 +99,7 @@ inline void SPECK_Decrypt(W p[2], const W c[2], const W k[R])
 /// \param key empty subkey array
 /// \param k user key array
 template <class W, unsigned int R>
-inline void SPECK_ExpandKey_2W(W key[R], const W k[2])
+CRYPTOPP_INLINE void SPECK_ExpandKey_2W(W key[R], const W k[2])
 {
     CRYPTOPP_ASSERT(R==32);
     W i=0, B=k[0], A=k[1];
@@ -111,7 +119,7 @@ inline void SPECK_ExpandKey_2W(W key[R], const W k[2])
 /// \param key empty subkey array
 /// \param k user key array
 template <class W, unsigned int R>
-inline void SPECK_ExpandKey_3W(W key[R], const W k[3])
+CRYPTOPP_INLINE void SPECK_ExpandKey_3W(W key[R], const W k[3])
 {
     CRYPTOPP_ASSERT(R==33 || R==26);
     W i=0, C=k[0], B=k[1], A=k[2];
@@ -138,7 +146,7 @@ inline void SPECK_ExpandKey_3W(W key[R], const W k[3])
 /// \param key empty subkey array
 /// \param k user key array
 template <class W, unsigned int R>
-inline void SPECK_ExpandKey_4W(W key[R], const W k[4])
+CRYPTOPP_INLINE void SPECK_ExpandKey_4W(W key[R], const W k[4])
 {
     CRYPTOPP_ASSERT(R==34 || R==27);
     W i=0, D=k[0], C=k[1], B=k[2], A=k[3];
@@ -184,7 +192,7 @@ extern size_t SPECK128_Dec_AdvancedProcessBlocks_NEON(const word64* subKeys, siz
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 #endif
 
-#if (CRYPTOPP_SSE41_AVAILABLE)
+#if defined(CRYPTOPP_SSE41_AVAILABLE)
 extern size_t SPECK64_Enc_AdvancedProcessBlocks_SSE41(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 
@@ -192,7 +200,7 @@ extern size_t SPECK64_Dec_AdvancedProcessBlocks_SSE41(const word32* subKeys, siz
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 #endif
 
-#if (CRYPTOPP_SSSE3_AVAILABLE)
+#if defined(CRYPTOPP_SSSE3_AVAILABLE)
 extern size_t SPECK128_Enc_AdvancedProcessBlocks_SSSE3(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 
@@ -200,13 +208,7 @@ extern size_t SPECK128_Dec_AdvancedProcessBlocks_SSSE3(const word64* subKeys, si
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 #endif
 
-#if (CRYPTOPP_POWER7_AVAILABLE)
-extern size_t SPECK64_Enc_AdvancedProcessBlocks_POWER7(const word32* subKeys, size_t rounds,
-    const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
-
-extern size_t SPECK64_Dec_AdvancedProcessBlocks_POWER7(const word32* subKeys, size_t rounds,
-    const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
-#elif (CRYPTOPP_ALTIVEC_AVAILABLE)
+#if defined(CRYPTOPP_ALTIVEC_AVAILABLE)
 extern size_t SPECK64_Enc_AdvancedProcessBlocks_ALTIVEC(const word32* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 
@@ -214,7 +216,7 @@ extern size_t SPECK64_Dec_AdvancedProcessBlocks_ALTIVEC(const word32* subKeys, s
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 #endif
 
-#if (CRYPTOPP_POWER8_AVAILABLE)
+#if defined(CRYPTOPP_POWER8_AVAILABLE)
 extern size_t SPECK128_Enc_AdvancedProcessBlocks_POWER8(const word64* subKeys, size_t rounds,
     const byte *inBlocks, const byte *xorBlocks, byte *outBlocks, size_t length, word32 flags);
 
@@ -233,9 +235,9 @@ std::string SPECK64::Base::AlgorithmProvider() const
     if (HasNEON())
         return "NEON";
 # endif
-# if (CRYPTOPP_POWER7_AVAILABLE)
-    if (HasPower7())
-        return "Power7";
+# if (CRYPTOPP_POWER8_AVAILABLE)
+    if (HasPower8())
+        return "Power8";
 # endif
 # if (CRYPTOPP_ALTIVEC_AVAILABLE)
     if (HasAltivec())
@@ -243,29 +245,6 @@ std::string SPECK64::Base::AlgorithmProvider() const
 # endif
 #endif
     return "C++";
-}
-
-unsigned int SPECK64::Base::OptimalDataAlignment() const
-{
-#if (CRYPTOPP_SPECK64_ADVANCED_PROCESS_BLOCKS)
-# if (CRYPTOPP_SSE41_AVAILABLE)
-    if (HasSSE41())
-        return 16;
-# endif
-# if (CRYPTOPP_ARM_NEON_AVAILABLE)
-    if (HasNEON())
-        return 4;
-# endif
-# if (CRYPTOPP_POWER7_AVAILABLE)
-    if (HasPower7())
-        return 4;
-# endif
-# if (CRYPTOPP_ALTIVEC_AVAILABLE)
-    if (HasAltivec())
-        return 16;
-# endif
-#endif
-    return GetAlignmentOf<word32>();
 }
 
 void SPECK64::Base::UncheckedSetKey(const byte *userKey, unsigned int keyLength, const NameValuePairs &params)
@@ -295,18 +274,13 @@ void SPECK64::Base::UncheckedSetKey(const byte *userKey, unsigned int keyLength,
         SPECK_ExpandKey_4W<word32, 27>(m_rkeys, m_wspace);
         break;
     default:
-        CRYPTOPP_ASSERT(0);
+        CRYPTOPP_ASSERT(0);;
     }
 
-    // Pre-splat the round keys for Altivec forward transformation
+    // Altivec loads the current subkey as a 16-byte vector
+    // The extra elements ensure memory backs the last subkey.
 #if CRYPTOPP_ALTIVEC_AVAILABLE
-    if (IsForwardTransformation() && HasAltivec())
-    {
-        AlignedSecBlock presplat(m_rkeys.size()*4);
-        for (size_t i=0, j=0; i<m_rkeys.size(); i++, j+=4)
-            presplat[j+0] = presplat[j+1] = presplat[j+2] = presplat[j+3] = m_rkeys[i];
-        m_rkeys.swap(presplat);
-    }
+    m_rkeys.Grow(m_rkeys.size()+4);
 #endif
 }
 
@@ -325,7 +299,7 @@ void SPECK64::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock,
         SPECK_Encrypt<word32, 27>(m_wspace+2, m_wspace+0, m_rkeys);
         break;
     default:
-        CRYPTOPP_ASSERT(0);
+        CRYPTOPP_ASSERT(0);;
     }
 
     // Do the endian gyrations from the paper and align pointers
@@ -348,7 +322,7 @@ void SPECK64::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock,
         SPECK_Decrypt<word32, 27>(m_wspace+2, m_wspace+0, m_rkeys);
         break;
     default:
-        CRYPTOPP_ASSERT(0);
+        CRYPTOPP_ASSERT(0);;
     }
 
     // Do the endian gyrations from the paper and align pointers
@@ -375,25 +349,6 @@ std::string SPECK128::Base::AlgorithmProvider() const
 # endif
 #endif
     return "C++";
-}
-
-unsigned int SPECK128::Base::OptimalDataAlignment() const
-{
-#if (CRYPTOPP_SPECK128_ADVANCED_PROCESS_BLOCKS)
-# if (CRYPTOPP_SSSE3_AVAILABLE)
-    if (HasSSSE3())
-        return 16;
-# endif
-# if (CRYPTOPP_ARM_NEON_AVAILABLE)
-    if (HasNEON())
-        return 8;
-# endif
-# if (CRYPTOPP_POWER8_AVAILABLE)
-    if (HasPower8())
-        return 8;
-# endif
-#endif
-    return GetAlignmentOf<word64>();
 }
 
 void SPECK128::Base::UncheckedSetKey(const byte *userKey, unsigned int keyLength, const NameValuePairs &params)
@@ -428,19 +383,8 @@ void SPECK128::Base::UncheckedSetKey(const byte *userKey, unsigned int keyLength
         SPECK_ExpandKey_4W<word64, 34>(m_rkeys, m_wspace);
         break;
     default:
-        CRYPTOPP_ASSERT(0);
+        CRYPTOPP_ASSERT(0);;
     }
-
-    // Pre-splat the round keys for Power8 forward transformation
-#if CRYPTOPP_POWER8_AVAILABLE
-    if (IsForwardTransformation() && HasPower8())
-    {
-        AlignedSecBlock presplat(m_rkeys.size()*2);
-        for (size_t i=0, j=0; i<m_rkeys.size(); i++, j+=2)
-            presplat[j+0] = presplat[j+1] = m_rkeys[i];
-        m_rkeys.swap(presplat);
-    }
-#endif
 }
 
 void SPECK128::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, byte *outBlock) const
@@ -461,7 +405,7 @@ void SPECK128::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock
         SPECK_Encrypt<word64, 34>(m_wspace+2, m_wspace+0, m_rkeys);
         break;
     default:
-        CRYPTOPP_ASSERT(0);
+        CRYPTOPP_ASSERT(0);;
     }
 
     // Do the endian gyrations from the paper and align pointers
@@ -487,7 +431,7 @@ void SPECK128::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock
         SPECK_Decrypt<word64, 34>(m_wspace+2, m_wspace+0, m_rkeys);
         break;
     default:
-        CRYPTOPP_ASSERT(0);
+        CRYPTOPP_ASSERT(0);;
     }
 
     // Do the endian gyrations from the paper and align pointers
@@ -495,11 +439,11 @@ void SPECK128::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock
     OutBlock oblk(xorBlock, outBlock); oblk(m_wspace[3])(m_wspace[2]);
 }
 
-#if (CRYPTOPP_SPECK64_ADVANCED_PROCESS_BLOCKS)
+#if defined(CRYPTOPP_SPECK64_ADVANCED_PROCESS_BLOCKS)
 size_t SPECK64::Enc::AdvancedProcessBlocks(const byte *inBlocks, const byte *xorBlocks,
         byte *outBlocks, size_t length, word32 flags) const
 {
-#if (CRYPTOPP_SSE41_AVAILABLE)
+#if defined(CRYPTOPP_SSE41_AVAILABLE)
     if (HasSSE41())
         return SPECK64_Enc_AdvancedProcessBlocks_SSE41(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);
@@ -509,11 +453,7 @@ size_t SPECK64::Enc::AdvancedProcessBlocks(const byte *inBlocks, const byte *xor
         return SPECK64_Enc_AdvancedProcessBlocks_NEON(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);
 #endif
-#if (CRYPTOPP_POWER7_AVAILABLE)
-    if (HasPower7())
-        return SPECK64_Enc_AdvancedProcessBlocks_POWER7(m_rkeys, (size_t)m_rounds,
-            inBlocks, xorBlocks, outBlocks, length, flags);
-#elif (CRYPTOPP_ALTIVEC_AVAILABLE)
+#if (CRYPTOPP_ALTIVEC_AVAILABLE)
     if (HasAltivec())
         return SPECK64_Enc_AdvancedProcessBlocks_ALTIVEC(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);
@@ -524,7 +464,7 @@ size_t SPECK64::Enc::AdvancedProcessBlocks(const byte *inBlocks, const byte *xor
 size_t SPECK64::Dec::AdvancedProcessBlocks(const byte *inBlocks, const byte *xorBlocks,
         byte *outBlocks, size_t length, word32 flags) const
 {
-#if (CRYPTOPP_SSE41_AVAILABLE)
+#if defined(CRYPTOPP_SSE41_AVAILABLE)
     if (HasSSE41())
         return SPECK64_Dec_AdvancedProcessBlocks_SSE41(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);
@@ -534,11 +474,7 @@ size_t SPECK64::Dec::AdvancedProcessBlocks(const byte *inBlocks, const byte *xor
         return SPECK64_Dec_AdvancedProcessBlocks_NEON(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);
 #endif
-#if (CRYPTOPP_POWER7_AVAILABLE)
-    if (HasPower7())
-        return SPECK64_Dec_AdvancedProcessBlocks_POWER7(m_rkeys, (size_t)m_rounds,
-            inBlocks, xorBlocks, outBlocks, length, flags);
-#elif (CRYPTOPP_ALTIVEC_AVAILABLE)
+#if (CRYPTOPP_ALTIVEC_AVAILABLE)
     if (HasAltivec())
         return SPECK64_Dec_AdvancedProcessBlocks_ALTIVEC(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);
@@ -547,11 +483,11 @@ size_t SPECK64::Dec::AdvancedProcessBlocks(const byte *inBlocks, const byte *xor
 }
 #endif  // CRYPTOPP_SPECK64_ADVANCED_PROCESS_BLOCKS
 
-#if (CRYPTOPP_SPECK128_ADVANCED_PROCESS_BLOCKS)
+#if defined(CRYPTOPP_SPECK128_ADVANCED_PROCESS_BLOCKS)
 size_t SPECK128::Enc::AdvancedProcessBlocks(const byte *inBlocks, const byte *xorBlocks,
         byte *outBlocks, size_t length, word32 flags) const
 {
-#if (CRYPTOPP_SSSE3_AVAILABLE)
+#if defined(CRYPTOPP_SSSE3_AVAILABLE)
     if (HasSSSE3())
         return SPECK128_Enc_AdvancedProcessBlocks_SSSE3(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);
@@ -572,7 +508,7 @@ size_t SPECK128::Enc::AdvancedProcessBlocks(const byte *inBlocks, const byte *xo
 size_t SPECK128::Dec::AdvancedProcessBlocks(const byte *inBlocks, const byte *xorBlocks,
         byte *outBlocks, size_t length, word32 flags) const
 {
-#if (CRYPTOPP_SSSE3_AVAILABLE)
+#if defined(CRYPTOPP_SSSE3_AVAILABLE)
     if (HasSSSE3())
         return SPECK128_Dec_AdvancedProcessBlocks_SSSE3(m_rkeys, (size_t)m_rounds,
             inBlocks, xorBlocks, outBlocks, length, flags);

@@ -10,35 +10,19 @@
 # See http://www.cryptopp.com/wiki/iOS_(Command_Line) for more details
 # ====================================================================
 
-if [ -z "$(command -v ./setenv-ios.sh)" ]; then
+if [ -z $(command -v ./setenv-ios.sh) ]; then
 	echo "Failed to locate setenv-ios.sh"
+	ls -Al *.sh
 	[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 fi
 
-# Temp directory
-if [[ -z "$TMPDIR" ]]; then
-	TMPDIR="$HOME/tmp"
-	mkdir "$TMPDIR"
-fi
-
-MAKE_JOBS=2
-
-# Cleanup old artifacts
-rm -rf "$TMPDIR/build.failed" 2>/dev/null
-rm -rf "$TMPDIR/build.log" 2>/dev/null
-
-if [ "$#" -gt 0 ]; then
-	# Accept platforms on the command line
-	PLATFORMS=("$@")
-elif [ -n "$PLATFORM" ]; then
-	# Accept platforms in the environment
-	PLATFORMS=("$PLATFORM")
-else
-	# Use all platforms
+if [ -z "${PLATFORM-}" ]; then
 	PLATFORMS=(iPhoneOS iPhoneSimulator Arm64 WatchOS WatchSimulator AppleTVOS AppleTVSimulator)
+else
+	PLATFORMS=(${PLATFORM})
 fi
 
-for platform in "${PLATFORMS[@]}"
+for platform in ${PLATFORMS[@]}
 do
 	make -f GNUmakefile-cross distclean > /dev/null 2>&1
 
@@ -47,37 +31,39 @@ do
 	echo "Testing for iOS support of $platform"
 
 	# Test if we can set the environment for the platform
-	if ! ./setenv-ios.sh "$platform";
+	./setenv-ios.sh "$platform"
+
+	if [ "$?" -ne "0" ];
 	then
 		echo
 		echo "$platform not supported by Xcode"
-		echo "$platform ==> FAILURE" >> "$TMPDIR/build.log"
+		echo "$platform ==> FAILURE" >> /tmp/build.log
 
-		touch "$TMPDIR/build.failed"
+		touch /tmp/build.failed
 		continue
 	fi
 
 	echo
-	echo "Building for $platform..."
+	echo "Building for $platform using $runtime..."
 	echo
 
-	# run in subshell to not keep any envars
+	# run in subshell to not keep any env vars
 	(
 		source ./setenv-ios.sh "$platform" > /dev/null 2>&1
-		if make -k -j "$MAKE_JOBS" -f GNUmakefile-cross static dynamic cryptest.exe;
-		then
-			echo "$platform ==> SUCCESS" >> "$TMPDIR/build.log"
+		make -f GNUmakefile-cross static dynamic cryptest.exe
+		if [ "$?" -eq "0" ]; then
+			echo "$platform ==> SUCCESS" >> /tmp/build.log
 		else
-			echo "$platform ==> FAILURE" >> "$TMPDIR/build.log"
-			touch "$TMPDIR/build.failed"
+			echo "$platform ==> FAILURE" >> /tmp/build.log
+			touch /tmp/build.failed
 		fi
 	)
 done
 
-cat "$TMPDIR/build.log"
+cat /tmp/build.log
 
 # let the script fail if any of the builds failed
-if [ -f "$TMPDIR/build.failed" ]; then
+if [ -f /tmp/build.failed ]; then
 	[[ "$0" = "${BASH_SOURCE[0]}" ]] && exit 1 || return 1
 fi
 
