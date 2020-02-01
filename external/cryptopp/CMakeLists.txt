@@ -231,26 +231,31 @@ function(CheckCompileLinkOption opt var prog)
 
     # TODO: improve this...
     CHECK_CXX_COMPILER_FLAG(${opt} ${var})
-    
-  elseif (APPLE)
-
-    message(STATUS "Performing Test ${var}")
-    try_compile(COMMAND_SUCCESS ${CMAKE_BINARY_DIR} ${prog} COMPILE_DEFINITIONS ${opt})
-    if (COMMAND_SUCCESS)
-      set(${var} 1 PARENT_SCOPE)
-      message(STATUS "Performing Test ${var} - Success")
-    else ()
-      set(${var} 0 PARENT_SCOPE)
-      message(STATUS "Performing Test ${var} - Failed")
-    endif ()
 
   else ()
 
     message(STATUS "Performing Test ${var}")
-    try_compile(COMMAND_SUCCESS ${CMAKE_BINARY_DIR} ${prog} COMPILE_DEFINITIONS ${opt})
-    if (COMMAND_SUCCESS)
-        set(${var} 1 PARENT_SCOPE)
-        message(STATUS "Performing Test ${var} - Success")
+    execute_process(
+      COMMAND sh -c "${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS} ${opt} ${prog} 2>&1"
+      RESULT_VARIABLE COMMAND_RESULT
+      OUTPUT_VARIABLE COMMAND_OUTPUT
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # message(STATUS "RESULT_VARIABLE ${RESULT_VARIABLE}")
+    # message(STATUS "COMMAND_RESULT ${COMMAND_RESULT}")
+    # message(STATUS "OUTPUT_VARIABLE ${OUTPUT_VARIABLE}")
+    # message(STATUS "COMMAND_OUTPUT ${COMMAND_OUTPUT}")
+
+    # This test is strict. We require two things. First, the invocation
+    # of the compile command must return 0. Second, there must be no
+    # messages on the console. We are interested in diagnostics like
+    # warnings to decide when to reject an option. But we will probably
+    # capture chatty compiler that want to say, "Hooray, success". For
+    # chatty compilers we will need to find a quiet option and use it
+    # for the test. Microsoft compilers come to mind.
+    if ("${COMMAND_RESULT}" EQUAL 0 AND "${COMMAND_OUTPUT}" STREQUAL "")
+      set(${var} 1 PARENT_SCOPE)
+      message(STATUS "Performing Test ${var} - Success")
     else ()
       set(${var} 0 PARENT_SCOPE)
       message(STATUS "Performing Test ${var} - Failed")
@@ -279,30 +284,35 @@ function(DumpMachine output pattern)
     set(${output} 0 PARENT_SCOPE)
 
   else ()
-      if(CMAKE_SYSTEM_PROCESSOR MATCHES ${pattern})
-          set(${output} TRUE PARENT_SCOPE)
-      endif()
+
+    execute_process(
+      COMMAND sh -c "${CMAKE_CXX_COMPILER} -dumpmachine 2>&1"
+      COMMAND ${GREP_CMD} -i -c -E "${pattern}"
+      OUTPUT_VARIABLE ${output}
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(${output} "${${output}}" PARENT_SCOPE)
+
   endif()
 
 endfunction(DumpMachine)
 
 # Thansk to Anonimal for MinGW; see http://github.com/weidai11/cryptopp/issues/466
-DumpMachine(CRYPTOPP_AMD64 "(x86_64)|(AMD64|amd64)")
-DumpMachine(CRYPTOPP_I386 "^i.86$")
-DumpMachine(CRYPTOPP_MINGW32 "^mingw32")
-DumpMachine(CRYPTOPP_MINGW64 "(w64-mingw32)|(mingw64)")
-DumpMachine(CRYPTOPP_X32 "(x32)")
-DumpMachine(CRYPTOPP_AARCH32 "^aarch32")
-DumpMachine(CRYPTOPP_AARCH64 "^aarch64")
-DumpMachine(CRYPTOPP_ARMHF "(armhf)|(arm7l)|(eabihf)")
-DumpMachine(CRYPTOPP_ARM "^arm")
+DumpMachine(CRYPTOPP_AMD64 "amd64|x86_64")
+DumpMachine(CRYPTOPP_I386 "i.86")
+DumpMachine(CRYPTOPP_MINGW32 "\\<mingw32\\>")
+DumpMachine(CRYPTOPP_MINGW64 "w64-mingw32|mingw64")
+DumpMachine(CRYPTOPP_X32 "x32")
+DumpMachine(CRYPTOPP_AARCH32 "Aarch32")
+DumpMachine(CRYPTOPP_AARCH64 "Aarch64")
+DumpMachine(CRYPTOPP_ARMHF "armhf|arm7l|eabihf")
+DumpMachine(CRYPTOPP_ARM "\\<arm\\>")
 
 # Detecting PowerPC is only good with GCC. IBM XLC compiler is
 # a little different and I don't know how to ask to the triplet
 # XLC is targeting. Below we punt by setting CRYPTOPP_POWERPC64
 # if we detect the compiler is XLC.
-DumpMachine(CRYPTOPP_POWERPC "^(powerpc|ppc)")
-DumpMachine(CRYPTOPP_POWERPC64 "^ppc64")
+DumpMachine(CRYPTOPP_POWERPC "ppc|powerpc")
+DumpMachine(CRYPTOPP_POWERPC64 "ppc64")
 
 ###############################################################################
 
@@ -373,12 +383,77 @@ endif ()
 
 ###############################################################################
 
+if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND (NOT ANDROID))
+
+  execute_process(COMMAND sh -c "${CMAKE_CXX_COMPILER} --version 2>&1"
+    COMMAND ${GREP_CMD} -i -c "macports"
+    OUTPUT_VARIABLE MACPORTS
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  if (MACPORTS EQUAL 0)
+    # Get GAS version, add defs + set as appropriate
+    set(GAS_CMD sh -c "${CMAKE_CXX_COMPILER} -xc -c /dev/null -Wa,-v -o/dev/null 2>&1")
+
+    execute_process(COMMAND ${GAS_CMD}
+      OUTPUT_VARIABLE GAS_STRING
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(FIND "${GAS_STRING}" "GNU assembler" GAS_OUTPUT)
+
+    if (NOT GAS_OUTPUT EQUAL -1)
+      #.intel_syntax wasn't supported until GNU assembler 2.10
+
+      # TODO(unassigned): string() REGEX was not cooperating at time of writing. Re-implement as needed.
+      execute_process(COMMAND echo ${GAS_STRING}
+        COMMAND ${GREP_CMD} -i -c -E "GNU.[Aa]ssembler.*(2\\.[1-9][0-9]|[3-9])"
+        OUTPUT_VARIABLE GAS210_OR_LATER)
+      if (GAS210_OR_LATER EQUAL 0)
+        list(APPEND CRYPTOPP_COMPILE_DEFINITIONS CRYPTOPP_DISABLE_ASM)
+        set(DISABLE_ASM 1)
+      endif ()
+
+      execute_process(COMMAND echo ${GAS_STRING}
+        COMMAND ${GREP_CMD} -i -c -E "GNU.[Aa]ssembler.*(2\\.1[7-9]|2\\.[2-9]|[3-9])"
+        OUTPUT_VARIABLE GAS217_OR_LATER)
+      if (GAS217_OR_LATER EQUAL 0)
+        list(APPEND CRYPTOPP_COMPILE_DEFINITIONS CRYPTOPP_DISABLE_SSSE3)
+        set(DISABLE_SSSE3 1)
+      endif ()
+
+      # OpenBSD and CentOS 5 needed this one due to ARIA and BLAKE2
+      execute_process(COMMAND echo ${GAS_STRING}
+        COMMAND ${GREP_CMD} -i -c -E "GNU.[Aa]ssembler.*(2\\.1[8-9]|2\\.[2-9]|[3-9])"
+        OUTPUT_VARIABLE GAS218_OR_LATER)
+      if (GAS218_OR_LATER EQUAL 0)
+        list(APPEND CRYPTOPP_COMPILE_DEFINITIONS CRYPTOPP_DISABLE_SSSE4)
+        set(DISABLE_SSE4 1)
+      endif ()
+
+      execute_process(COMMAND echo ${GAS_STRING}
+        COMMAND ${GREP_CMD} -i -c -E "GNU.[Aa]ssembler.*(2\\.19|2\\.[2-9]|[3-9])"
+        OUTPUT_VARIABLE GAS219_OR_LATER)
+      if (GAS219_OR_LATER EQUAL 0)
+        list(APPEND CRYPTOPP_COMPILE_DEFINITIONS CRYPTOPP_DISABLE_AESNI)
+        set(DISABLE_AESNI 1)
+      endif ()
+
+      # Ubuntu 10 and Ubuntu 12 needed this one
+      execute_process(COMMAND echo ${GAS_STRING}
+        COMMAND ${GREP_CMD} -i -c -E "GNU.[Aa]ssembler.*(2\\.2[3-9]|2\\.[3-9]|[3-9])"
+        OUTPUT_VARIABLE GAS223_OR_LATER)
+      if (GAS223_OR_LATER EQUAL 0)
+        list(APPEND CRYPTOPP_COMPILE_DEFINITIONS CRYPTOPP_DISABLE_SHA)
+        set(DISABLE_SHA 1)
+      endif ()
+    endif ()
+  endif ()
+endif ()
+
 # TODO: what about ICC and LLVM on Windows?
 if (MSVC)
   if (CMAKE_SYSTEM_VERSION MATCHES "10\\.0.*")
     list(APPEND CRYPTOPP_COMPILE_DEFINITIONS "_WIN32_WINNT=0x0A00")
   endif ()
-  list(APPEND CRYPTOPP_COMPILE_OPTIONS /FI winapifamily.h)
+  list(APPEND CRYPTOPP_COMPILE_OPTIONS "/FI\"winapifamily.h\"")
 endif ()
 
 # Enable PIC for all target machines except 32-bit i386 due to register pressures.
@@ -967,7 +1042,7 @@ function(cryptopp_target_compile_properties target)
     set_target_properties(${target} PROPERTIES COMPILE_DEFINITIONS "${CRYPTOPP_COMPILE_DEFINITIONS}")
   endif()
   if (NOT ${CMAKE_VERSION} VERSION_LESS "2.8.12")
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+    target_compile_options(${target} PUBLIC ${CRYPTOPP_COMPILE_OPTIONS})
   else()
     string (REPLACE ";" " " PROP_STR "${CRYPTOPP_COMPILE_OPTIONS}")
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${PROP_STR}")
