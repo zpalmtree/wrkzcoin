@@ -358,10 +358,10 @@ bool ValidateTransaction::validateTransactionFee()
     const bool isFusion = m_currency.isFusionTransaction(
         m_transaction, m_cachedTransaction.getTransactionBinaryArray().size(), m_blockHeight);
 
+    bool validFee = fee != 0;
+
     if (!isFusion)
     {
-        bool validFee = fee != 0;
-
         if (m_blockHeight >= CryptoNote::parameters::MINIMUM_FEE_PER_BYTE_V1_HEIGHT)
         {
             const auto minFee = Utilities::getMinimumTransactionFee(
@@ -393,7 +393,7 @@ bool ValidateTransaction::validateTransactionFee()
         // Fusion with fee
         uint64_t fusion_fee = 0;
 
-        bool validFee = fusion_fee == 0;
+        validFee = fusion_fee == 0;
 
         if (m_blockHeight > CryptoNote::parameters::FIXED_FUSION_FEE_V1_HEIGHT)
         {            
