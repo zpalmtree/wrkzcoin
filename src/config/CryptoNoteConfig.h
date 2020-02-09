@@ -113,6 +113,13 @@ namespace CryptoNote
         /* Height for our first fee to byte change to take effect. */
         const uint64_t MINIMUM_FEE_PER_BYTE_V1_HEIGHT  = 832000;
 
+        /* Fusion Fee. */        
+        const uint64_t FIXED_FUSION_FEE_V1 = UINT64_C(100);
+
+        /* Height for our first fusion with fee. */
+        const uint64_t FIXED_FUSION_FEE_V1_HEIGHT  = 1000000;
+
+
         /* This section defines our minimum and maximum mixin counts required for transactions */
         const uint64_t MINIMUM_MIXIN_V1 = 0;
 
