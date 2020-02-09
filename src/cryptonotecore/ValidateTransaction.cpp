@@ -400,10 +400,14 @@ bool ValidateTransaction::validateTransactionFee()
     {
         // Fusion with fee
         uint64_t fusion_fee = 0;
+
+        bool validFee = fusion_fee == 0;
+
         if (m_blockHeight > CryptoNote::parameters::FIXED_FUSION_FEE_V1_HEIGHT)
-        {
-            fusion_fee = static_cast<uint64_t>(CryptoNote::parameters::FIXED_FUSION_FEE_V1_HEIGHT);
+        {            
+            validFee = fusion_fee == static_cast<uint64_t>(CryptoNote::parameters::FIXED_FUSION_FEE_V1);
         }
+        
         fee = fusion_fee;
     }
 
