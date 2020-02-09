@@ -353,6 +353,8 @@ bool ValidateTransaction::validateTransactionFee()
 
     const uint64_t fee = m_sumOfInputs - m_sumOfOutputs;
 
+    uint64_t checked_fee = fee;
+
     const bool isFusion = m_currency.isFusionTransaction(
         m_transaction, m_cachedTransaction.getTransactionBinaryArray().size(), m_blockHeight);
 
@@ -385,16 +387,6 @@ bool ValidateTransaction::validateTransactionFee()
         {
             validFee = fee >= CryptoNote::parameters::MINIMUM_FEE_V1;
         }
-
-        if (!validFee)
-        {
-            setTransactionValidationResult(
-                CryptoNote::error::TransactionValidationError::WRONG_FEE,
-                "Transaction fee is below minimum fee and is not a fusion transaction"
-            );
-
-            return false;
-        }
     }
     else
     {
@@ -407,11 +399,24 @@ bool ValidateTransaction::validateTransactionFee()
         {            
             validFee = fusion_fee == static_cast<uint64_t>(CryptoNote::parameters::FIXED_FUSION_FEE_V1);
         }
-        
-        fee = fusion_fee;
+        else if (m_isPoolTransaction)
+        {
+            validFee = fusion_fee >= 0;
+        }
+        checked_fee = fusion_fee;
     }
 
-    m_validationResult.fee = fee;
+    if (!validFee)
+    {
+        setTransactionValidationResult(
+            CryptoNote::error::TransactionValidationError::WRONG_FEE,
+            "Transaction fee is below minimum fee and is not a fusion transaction"
+        );
+
+        return false;
+    }
+
+    m_validationResult.fee = checked_fee;
 
     return true;
 }
