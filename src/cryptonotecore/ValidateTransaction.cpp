@@ -396,21 +396,22 @@ bool ValidateTransaction::validateTransactionFee()
         validFee = fusion_fee == 0;
 
         if (m_blockHeight > CryptoNote::parameters::FIXED_FUSION_FEE_V1_HEIGHT)
-        {            
-            validFee = fusion_fee == static_cast<uint64_t>(CryptoNote::parameters::FIXED_FUSION_FEE_V1);
+        {
+            checked_fee = static_cast<uint64_t>(CryptoNote::parameters::FIXED_FUSION_FEE_V1);
+            
+            validFee = fusion_fee == checked_fee;
         }
         else if (m_isPoolTransaction)
         {
             validFee = fusion_fee >= 0;
         }
-        checked_fee = fusion_fee;
     }
 
     if (!validFee)
     {
         setTransactionValidationResult(
             CryptoNote::error::TransactionValidationError::WRONG_FEE,
-            "Transaction fee is below minimum fee and is not a fusion transaction"
+            "Transaction fee is below minimum fee or is not a fusion transaction"
         );
 
         return false;
